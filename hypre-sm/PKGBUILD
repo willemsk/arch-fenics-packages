@@ -1,5 +1,7 @@
 # Maintainer: Sigvald Marholm <marholm@marebakken.com>
 
+# Updated to v2.20.0: Kherim Willems (kherimwillems at gmail dot com)
+
 # Adapted from the hypre AUR package.
 # Original contributor: Alessandro G. Magnasco <alessandromagnasco at gmail dot com>
 # Original contributor: Bertrand Lacoste <bertrandlacoste at gmail dot com>
@@ -11,18 +13,18 @@
 
 pkgname=hypre-sm
 _pkgname=hypre
-pkgver=2.14.0
+pkgver=2.20.0
 _suffix=
 pkgrel=1
 pkgdesc="A library for solving large, sparse linear systems on massively parallel computers"
 arch=('i686' 'x86_64')
-url="http://acts.nersc.gov/hypre"
+url="https://github.com/hypre-space/hypre"
 license=('lgpl')
 depends=('gcc-libs' 'gcc-fortran' 'openmpi' 'blas' 'lapack' 'superlu')
 provides=("${_pkgname}=${pkgver}")
 conflicts=("${_pkgname}")
-source=("${_pkgname}-${pkgver}.tar.gz::https://github.com/LLNL/hypre/archive/v${pkgver}.tar.gz")
-sha256sums=('10cfcd555618137c194958f84f44724fece45b58c59002d1195fed354e2ca16c')
+source=("${_pkgname}-${pkgver}.tar.gz::${url}/archive/v${pkgver}.tar.gz")
+sha256sums=('5be77b28ddf945c92cde4b52a272d16fb5e9a7dc05e714fc5765948cba802c01')
 
 build() {
   _build_dir="${srcdir}/${_pkgname}-${pkgver}${_suffix}"
