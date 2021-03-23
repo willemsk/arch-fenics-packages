@@ -1,0 +1,152 @@
+--- Applications/BipartiteMatchings/ApproxWeightPerfectMatching.h
++++ Applications/BipartiteMatchings/ApproxWeightPerfectMatching.h
+@@ -389,7 +389,7 @@ void UpdateMatching(FullyDistVec<IT, IT>& mateRow2Col, FullyDistVec<IT, IT>& mat
+ 
+ 
+ 
+-int ThreadBuffLenForBinning(int itemsize, int nbins)
++inline int ThreadBuffLenForBinning(int itemsize, int nbins)
+ {
+     // 1MB shared cache (per 2 cores) in KNL
+ #ifndef L2_CACHE_SIZE
+@@ -415,7 +415,6 @@ std::vector< std::tuple<IT,IT,NT> > Phase1(const AWPM_param<IT>& param, Dcsc<IT,
+     
+     
+     
+-    double tstart = MPI_Wtime();
+     
+     
+     MPI_Comm World = param.commGrid->GetWorld();
+@@ -526,8 +525,6 @@ std::vector< std::tuple<IT,IT,NT> > Phase1(const AWPM_param<IT>& param, Dcsc<IT,
+         }
+     }
+     
+-    double t1Comp = MPI_Wtime() - tstart;
+-    tstart = MPI_Wtime();
+     
+     // Step 3: Communicate data
+     
+@@ -546,7 +543,6 @@ std::vector< std::tuple<IT,IT,NT> > Phase1(const AWPM_param<IT>& param, Dcsc<IT,
+     std::vector< std::tuple<IT,IT,NT> > recvTuples1(totrecv);
+     MPI_Alltoallv(sendTuples.data(), sendcnt.data(), sdispls.data(), MPI_tuple, recvTuples1.data(), recvcnt.data(), rdispls.data(), MPI_tuple, World);
+     MPI_Type_free(&MPI_tuple);
+-    double t1Comm = MPI_Wtime() - tstart;
+     return recvTuples1;
+ }
+ 
+@@ -728,8 +724,6 @@ std::vector< std::tuple<IT,IT,IT,NT> > Phase2(const AWPM_param<IT>& param, std::
+ 
+     // Step 4: Communicate data
+     
+-    double t2Comp = MPI_Wtime() - tstart;
+-    tstart = MPI_Wtime();
+     
+     std::vector<int> recvcnt (param.nprocs);
+     std::vector<int> rdispls (param.nprocs, 0);
+@@ -746,7 +740,6 @@ std::vector< std::tuple<IT,IT,IT,NT> > Phase2(const AWPM_param<IT>& param, std::
+     std::vector< std::tuple<IT,IT,IT,NT> > recvTuples1(totrecv);
+     MPI_Alltoallv(sendTuples.data(), sendcnt.data(), sdispls.data(), MPI_tuple, recvTuples1.data(), recvcnt.data(), rdispls.data(), MPI_tuple, World);
+     MPI_Type_free(&MPI_tuple);
+-    double t2Comm = MPI_Wtime() - tstart;
+     return recvTuples1;
+ }
+ 
+@@ -923,15 +916,10 @@ void TwoThirdApprox(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2
+ #endif
+ 		// C requests
+ 		// each row is for a processor where C requests will be sent to
+-        double tstart = MPI_Wtime();
+         std::vector<std::tuple<IT,IT,NT>> recvTuples = Phase1(param, dcsc, colptr, RepMateR2C, RepMateC2R, RepMateWR2C, RepMateWC2R );
+-        tPhase1 += (MPI_Wtime() - tstart);
+-        tstart = MPI_Wtime();
+         
+         std::vector<std::tuple<IT,IT,IT,NT>> recvTuples1 = Phase2(param, recvTuples, dcsc, colptr, RepMateR2C, RepMateC2R, RepMateWR2C, RepMateWC2R );
+         std::vector< std::tuple<IT,IT,NT> >().swap(recvTuples);
+-        tPhase2 += (MPI_Wtime() - tstart);
+-        tstart = MPI_Wtime();
+         
+         
+ 		std::vector<std::tuple<IT,IT,IT,NT>> bestTuplesPhase3 (lncol);
+@@ -979,8 +967,6 @@ void TwoThirdApprox(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2
+ 		//vector< tuple<IT,IT,IT, NT> >().swap(recvTuples1);
+ 		recvTuples1 = ExchangeData1(tempTuples1, World);
+ 		
+-        tPhase3 += (MPI_Wtime() - tstart);
+-        tstart = MPI_Wtime();
+ 		
+ 		std::vector<std::tuple<IT,IT,IT,IT, NT>> bestTuplesPhase4 (lncol);
+ 		// we could have used lnrow in both bestTuplesPhase3 and bestTuplesPhase4
+@@ -1040,8 +1026,6 @@ void TwoThirdApprox(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2
+ 			}
+ 		}
+ 		std::vector<std::tuple<IT,IT,IT,IT>> recvWinnerTuples = ExchangeData1(winnerTuples, World);
+-        tPhase4 += (MPI_Wtime() - tstart);
+-        tstart = MPI_Wtime();
+ 		
+ 		// at the owner of (mj,j)
+ 		std::vector<std::tuple<IT,IT>> rowBcastTuples(recvWinnerTuples.size()); //(mi,mj)
+@@ -1062,9 +1046,6 @@ void TwoThirdApprox(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2
+ 		
+ 		std::vector<std::tuple<IT,IT>> updatedR2C = MateBcast(rowBcastTuples, RowWorld);
+ 		std::vector<std::tuple<IT,IT>> updatedC2R = MateBcast(colBcastTuples, ColWorld);
+-        
+-        tPhase5 += (MPI_Wtime() - tstart);
+-        tstart = MPI_Wtime();
+ 		
+ 		
+ #ifdef THREADED
+@@ -1093,7 +1074,6 @@ void TwoThirdApprox(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2
+ 		weightPrev = weightCur;
+ 		weightCur = MatchingWeight(RepMateWC2R, RowWorld, minw);
+ 		
+-        tUpdate += (MPI_Wtime() - tstart);
+ 		
+ 		//UpdateMatching(mateRow2Col, mateCol2Row, RepMateR2C, RepMateC2R);
+ 		//CheckMatching(mateRow2Col,mateCol2Row);
+@@ -1101,13 +1081,7 @@ void TwoThirdApprox(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2
+ 	}
+ 	
+ #ifdef TIMING
+-    if(myrank==0)
+-    {
+-        std::cout << "------------- overal timing (HWPM) -------------" << std::endl;
+-        //std::cout  <<  t1CompAll << " " << t1CommAll << " " << t2CompAll << " " << t2CommAll << " " << t3CompAll << " " << t3CommAll << " " << t4CompAll << " " << t4CommAll << " " << t5CompAll << " " << t5CommAll << " " << tUpdateMateCompAll << " " << tUpdateWeightAll << std::endl;
+-        std::cout  <<"Phase1: "<<  tPhase1 << "\nPhase2: " << tPhase2 << "\nPhase3: " << tPhase3 << "\nPhase4: " << tPhase4 << "\nPhase5: " << tPhase5 << "\nUpdate: " << tUpdate << std::endl;
+-        std::cout << "-------------------------------------------------" << std::endl;
+-    }
++   
+ #endif
+ 	// update the distributed mate vectors from replicated mate vectors
+ 	UpdateMatching(mateRow2Col, mateCol2Row, RepMateR2C, RepMateC2R);
+
+--- Applications/BipartiteMatchings/BPMaximalMatching.h
++++ Applications/BipartiteMatchings/BPMaximalMatching.h
+@@ -14,7 +14,6 @@
+ #define GREEDY 1
+ #define KARP_SIPSER 2
+ #define DMD 3
+-MTRand GlobalMT(123); // for reproducible result
+ 
+ namespace combblas {
+ 
+@@ -24,7 +23,7 @@ template <typename Par_DCSC_Bool, typename IT>
+ void MaximalMatching(Par_DCSC_Bool & A, Par_DCSC_Bool & AT, FullyDistVec<IT, IT>& mateRow2Col,
+             FullyDistVec<IT, IT>& mateCol2Row, FullyDistVec<IT, IT>& degColRecv, int type, bool rand=true)
+ {
+-
++    static MTRand GlobalMT(123); // for reproducible result
+ 	typedef VertexTypeML < IT, IT> VertexType;
+     int nprocs, myrank;
+     MPI_Comm_size(MPI_COMM_WORLD,&nprocs);
+
+--- Applications/BipartiteMatchings/BPMaximumMatching.h
++++ Applications/BipartiteMatchings/BPMaximumMatching.h
+@@ -230,7 +230,7 @@ template <typename IT, typename NT,typename DER>
+ void maximumMatching(SpParMat < IT, NT, DER > & A, FullyDistVec<IT, IT>& mateRow2Col,
+                      FullyDistVec<IT, IT>& mateCol2Row, bool prune=true, bool randMM = false, bool maximizeWeight = false)
+ {
+-	
++	static MTRand GlobalMT(123); // for reproducible result	
+ 	typedef VertexTypeMM <IT> VertexType;
+ 	
+     int nthreads=1;

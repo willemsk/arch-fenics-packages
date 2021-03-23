@@ -1,0 +1,22 @@
+# Ignore everything in subfolders
+*/*
+
+# Do not ignore typical package building files
+!.gitigore
+!.gitsubmodules
+!.gitattributes
+!*/PKGBUILD
+!*/.SRCINFO
+!*/*.patch
+!*/*.install
+
+# Ignore temporary packaging files (redundant)
+*/pkg/
+*/src/
+*.pkg.tar
+*.log
+*.tar.gz
+*.tar.zst
+*.tgz
+*.sh
+*.zip

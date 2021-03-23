@@ -1,0 +1,16 @@
+pkgbase = hypre
+	pkgdesc = A library for solving large, sparse linear systems on massively parallel computers
+	pkgver = 2.20.0
+	pkgrel = 1
+	url = https://github.com/hypre-space/hypre
+	arch = x86_64
+	license = lgpl
+	makedepends = gcc-fortran
+	depends = superlu
+	depends = superlu_dist
+	depends = openmpi
+	source = https://github.com/hypre-space/hypre/archive/v2.20.0.tar.gz
+	sha512sums = 842868b494960506fa3df4e72abb42084d701ec14305f9b040b9dcb578b4bbdaa8afb079057a7e53ad721b440c72ee804775c3b8319f2d01a2f281920a9cd350
+
+pkgname = hypre
+

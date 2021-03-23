@@ -1,0 +1,59 @@
+# Maintainer: Christian Pfeiffer <cpfeiffer at live de>
+# Contributor: Michael Straube <straubem gmx de>
+# Contributor: xantares <xantares09 at hotmail dot com>
+# Contributer: Kherim Willems
+
+pkgname=combblas
+pkgver=1.6.2
+pkgrel=3
+pkgdesc="Combinatorial BLAS Library"
+arch=('x86_64')
+url="https://github.com/PASSIONLab/CombBLAS"
+license=("MIT")
+depends=('openmpi')
+makedepends=('cmake')
+source=("${pkgname}::git+https://github.com/PASSIONLab/CombBLAS"
+        superlu_dist.patch)
+
+sha512sums=('SKIP'
+            '46934807bb06dd060dae40cf1a3f83a74ce2139fcca5e92039634182cfd807bbdc80f8b0fbfcd0177e4460c5b2c46c76114912f34d15f8b07c3fb8e12cd9b102')
+
+prepare() {
+  cd "${srcdir}/${pkgname}"
+
+  mkdir _build
+}
+
+build() {
+  cd "${srcdir}/${pkgname}"
+
+  patch -Np0 < ../superlu_dist.patch
+
+  cd _build
+
+  # Some tests are computationally heavy MPI stuff, so avoid them
+  cmake .. \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_SKIP_INSTALL_RPATH=ON \
+    -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_TESTING=OFF
+
+  make
+}
+
+package() {
+  cd "${srcdir}/${pkgname}/_build"
+
+  make DESTDIR="${pkgdir}" install
+
+  # Remove OS X leftover files
+  find "${pkgdir}" -name "*.DS_Store" -delete
+  find "${pkgdir}" -name "._*" -delete
+
+  install -Dm644 "${srcdir}/${pkgname}/LICENSE" -t "${pkgdir}"/usr/share/licenses/$pkgname/
+
+  # Add extra headers
+  install -Dm644 "${srcdir}/${pkgname}"/Applications/*.h -t "${pkgdir}"/usr/include/CombBLAS/Applications/
+  install -Dm644 "${srcdir}/${pkgname}"/Applications/BipartiteMatchings/*.h -t "${pkgdir}"/usr/include/CombBLAS/BipartiteMatchings/
+}

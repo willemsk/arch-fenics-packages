@@ -1,12 +1,14 @@
-TARGETS = parmetis-sm \
-				superlu \
+TARGETS = parmetis \
+				superlu_dist \
 				scalapack \
-				scotch-sm \
-				hypre-sm \
+				scotch \
+				hypre \
 				mumps-par \
+				archimedes-tools \
 				petsc \
 				slepc \
 				petsc4py \
+				slepc4py \
 				python-ufl \
 				python-dijitso \
 				python-fiat \
@@ -25,4 +27,4 @@ $(TARGETS):
 
 
 .DEFAULT: all
-.PHONY: $(TARGETS)
+.PHONY: all $(TARGETS)

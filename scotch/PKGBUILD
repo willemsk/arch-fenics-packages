@@ -8,8 +8,7 @@
 # - Used sed to add --oversubscribe for mpirun in check().
 #   The test will not run on less than 4 cores otherwise.
  
-pkgname=scotch-sm
-_pkgname=scotch
+pkgname=scotch
 pkgver=6.1.0
 pkgrel=1
 pkgdesc="Software package and libraries for graph, mesh and hypergraph partitioning, static mapping, and sparse matrix block ordering. This is the all-inclusive version (MPI/serial/esmumps)."
@@ -19,11 +18,11 @@ depends=('zlib' 'openmpi' 'bzip2')
 provides=("scotch=${pkgver}" 'ptscotch' 'ptscotch-openmpi' 'scotch_esmumps' 'scotch_ptesmumps')
 conflicts=('scotch' 'ptscotch-openmpi' 'scotch_esmumps' 'scotch_esmumps5')
 arch=('i686' 'x86_64')
-source=("https://gitlab.inria.fr/scotch/scotch/-/archive/v${pkgver}/${_pkgname}-v${pkgver}.tar.gz")
+source=("https://gitlab.inria.fr/scotch/scotch/-/archive/v${pkgver}/${pkgname}-v${pkgver}.tar.gz")
 sha256sums=('4fe537f608f0fe39ec78807f90203f9cca1181deb16bfa93b7d4cd440e01bbd1')
  
 prepare() {
-  cd "${srcdir}/${_pkgname}-v${pkgver}/src"
+  cd "${srcdir}/${pkgname}-v${pkgver}/src"
 
   [ -e Makefile.inc ] && rm Makefile.inc
   cp "Make.inc/Makefile.inc.${CARCH/_/-}_pc_linux2.shlib" Makefile.inc
@@ -55,7 +54,7 @@ prepare() {
 }
  
 build() {
-  cd "${srcdir}/${_pkgname}-v${pkgver}/src"
+  cd "${srcdir}/${pkgname}-v${pkgver}/src"
  
   make scotch
   make -j1 esmumps
@@ -68,7 +67,7 @@ build() {
 }
  
 check() {
-  cd "${srcdir}/${_pkgname}-v${pkgver}/src"
+  cd "${srcdir}/${pkgname}-v${pkgver}/src"
   
   # Thx to sigvald: https://aur.archlinux.org/packages/scotch/?O=20&PP=10#comment-634455
   # Upstream issue: https://gitlab.inria.fr/scotch/scotch/issues/7
@@ -79,7 +78,7 @@ check() {
 }
  
 package() {
-  cd "${srcdir}/${_pkgname}-v${pkgver}/src"
+  cd "${srcdir}/${pkgname}-v${pkgver}/src"
  
   make install prefix="${pkgdir}/usr" includedir="${pkgdir}/usr/include/scotch"
  

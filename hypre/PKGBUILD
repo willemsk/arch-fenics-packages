@@ -1,0 +1,45 @@
+# Maintainer: Alessandro G. Magnasco <alessandromagnasco at gmail dot com>
+# Contributor: Bertrand Lacoste <bertrandlacoste at gmail dot com>
+# Contributor: Tim Langlois <langlois at cs dot cornell dot edu>
+# Maintainer: Christian Pfeiffer <cpfeiffer at live dot de>
+# Contributor: Wink Saville <wink at saville dot com>
+
+pkgname=hypre
+pkgver=2.20.0
+pkgrel=1
+pkgdesc="A library for solving large, sparse linear systems on massively parallel computers"
+arch=('x86_64')
+url="https://github.com/hypre-space/hypre"
+license=('lgpl')
+depends=('superlu' 'superlu_dist' 'openmpi')
+makedepends=('gcc-fortran')
+source=(https://github.com/hypre-space/hypre/archive/v${pkgver}.tar.gz)
+sha512sums=('842868b494960506fa3df4e72abb42084d701ec14305f9b040b9dcb578b4bbdaa8afb079057a7e53ad721b440c72ee804775c3b8319f2d01a2f281920a9cd350')
+
+build() {
+  _build_dir="${srcdir}/${pkgname}-${pkgver}${_suffix}"
+  cd "${_build_dir}/src"
+
+  # disable internal superlu and fei for now, not sure yet how to get it to use external superlu
+  CFLAGS="${CFLAGS} -fopenmp" CXXFLAGS="${CXXFLAGS} -fopenmp" LDFLAGS="${LDFLAGS} -lgomp" \
+  ./configure --prefix="${pkgdir}/usr" --includedir="${pkgdir}/usr/include/hypre" --enable-shared \
+      --with-superlu --with-superlu-include=/usr/include/superlu --with-superlu-lib="-lsuperlu" \
+      --with-dsuperlu --with-dsuperlu-include=/usr/include/superlu_dist --with-dsuperlu-lib="-lsuperlu_dist" \
+      --with-blas --with-lapack --with-openmp --enable-fortran --with-mli --with-MPI
+
+  make
+}
+
+check() {
+  _build_dir="${srcdir}/${pkgname}-${pkgver}${_suffix}"
+  cd "${_build_dir}/src"
+
+  make test
+}
+
+package() {
+  _build_dir="${srcdir}/${pkgname}-${pkgver}${_suffix}"
+  cd "${_build_dir}/src"
+
+  make install
+}
